@@ -1,0 +1,214 @@
+services:
+  # 🚀 Traefik Reverse Proxy
+  traefik:
+    image: traefik:v2.10
+    container_name: ds2025-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - demo_net
+    restart: always
+
+  # 📊 Shared PostgreSQL Database
+  postgres:
+    image: postgres:17
+    container_name: ds2025-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - demo_net
+
+
+  # 🔐 Authorization Service
+  authorization-service:
+    build: ./AuthorizationService
+    container_name: ds2025-authorization-service
+    depends_on:
+      - postgres
+      - traefik
+    environment:
+      DB_IP: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: root
+      DB_DBNAME: auth-db
+      PORT: 8083
+      RABBITMQ_URL: amqps://jjzdoqha:ZDgoASIn_byMxyvseOM3lswd-ST0sipZ@cow.rmq2.cloudamqp.com/jjzdoqha
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.auth.entrypoints=web"
+      - "traefik.http.services.auth.loadbalancer.server.port=8083"
+    networks:
+      - demo_net
+
+  # 👥 User Service
+  user-service:
+    build: ./demo
+    container_name: ds2025-user-service
+    depends_on:
+      - postgres
+      - traefik
+    environment:
+      DB_IP: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: root
+      DB_DBNAME: example-db
+      PORT: 8081
+      AUTH_SERVICE_URL: http://authorization-service:8083
+      RABBITMQ_URL: amqps://jjzdoqha:ZDgoASIn_byMxyvseOM3lswd-ST0sipZ@cow.rmq2.cloudamqp.com/jjzdoqha
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user.rule=PathPrefix(`/api/users`)"
+      - "traefik.http.routers.user.entrypoints=web"
+      - "traefik.http.services.user.loadbalancer.server.port=8081"
+    networks:
+      - demo_net
+
+  # ⚙️ Device Service
+  device-service:
+    build: ./DeviceMicroService
+    container_name: ds2025-device-service
+    depends_on:
+      - postgres
+      - traefik
+    environment:
+      DB_IP: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: root
+      DB_DBNAME: device-db
+      PORT: 8082
+      RABBITMQ_URL: amqps://jjzdoqha:ZDgoASIn_byMxyvseOM3lswd-ST0sipZ@cow.rmq2.cloudamqp.com/jjzdoqha
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.device.rule=PathPrefix(`/api/devices`)"
+      - "traefik.http.routers.device.entrypoints=web"
+      - "traefik.http.services.device.loadbalancer.server.port=8082"
+    networks:
+      - demo_net
+
+  # 📊 Monitoring Service
+  monitoring-service:
+    build: ./MonitoringMicroservice
+    container_name: ds2025-monitoring-service
+    depends_on:
+      - postgres
+      - traefik
+    environment:
+      DB_IP: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: root
+      DB_DBNAME: monitoring-db
+      PORT: 8084
+      RABBITMQ_URL: amqps://jjzdoqha:ZDgoASIn_byMxyvseOM3lswd-ST0sipZ@cow.rmq2.cloudamqp.com/jjzdoqha
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monitoring.rule=PathPrefix(`/api/monitoring`)"
+      - "traefik.http.routers.monitoring.entrypoints=web"
+      - "traefik.http.routers.monitoring.priority=10"
+      - "traefik.http.services.monitoring.loadbalancer.server.port=8084"
+    networks:
+      - demo_net
+
+  # 🔌 WebSocket Service
+  websocket-service:
+    build: ./WebSocketService
+    container_name: ds2025-websocket-service
+    depends_on:
+      - traefik
+    environment:
+      PORT: 8085
+      RABBITMQ_URL: amqps://jjzdoqha:ZDgoASIn_byMxyvseOM3lswd-ST0sipZ@cow.rmq2.cloudamqp.com/jjzdoqha
+      CHAT_SERVICE_URL: http://chat-service:8086
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.websocket.rule=PathPrefix(`/ws`) || PathPrefix(`/api/ws`)"
+      - "traefik.http.routers.websocket.entrypoints=web"
+      - "traefik.http.routers.websocket.priority=15"
+      - "traefik.http.services.websocket.loadbalancer.server.port=8085"
+    networks:
+      - demo_net
+
+  # 💬 Chat Service
+  chat-service:
+    build: ./ChatService
+    container_name: ds2025-chat-service
+    depends_on:
+      - traefik
+      - websocket-service
+    environment:
+      PORT: 8086
+      WEBSOCKET_SERVICE_URL: http://websocket-service:8085
+      HUGGINGFACE_TOKEN: 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
+      AI_ENABLED: "true"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=PathPrefix(`/api/chat`)"
+      - "traefik.http.routers.chat.entrypoints=web"
+      - "traefik.http.routers.chat.priority=12"
+      - "traefik.http.services.chat.loadbalancer.server.port=8086"
+    networks:
+      - demo_net
+
+  # 🎨 Frontend Application
+  frontend:
+    build: ./simple-frontend
+    container_name: ds2025-frontend
+    depends_on:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - demo_net
+
+  # 📡 Device Data Producer (Simulator)
+  producer:
+    build: ./producer
+    container_name: ds2025-producer
+    restart: unless-stopped
+    volumes:
+      - ./producer_config.json:/app/producer_config.json:ro
+    networks:
+      - demo_net
+    profiles:
+      - producer
+
+
+networks:
+  demo_net:
+    name: ds2025_demo_net
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: ds2025_postgres_data

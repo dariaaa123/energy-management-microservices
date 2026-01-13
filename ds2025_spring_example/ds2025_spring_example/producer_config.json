@@ -1,0 +1,7 @@
+{
+  "rabbitmq_url": "amqps://jjzdoqha:ZDgoASIn_byMxyvseOM3lswd-ST0sipZ@cow.rmq2.cloudamqp.com/jjzdoqha",
+  "exchange": "data_exchange",
+  "routing_key": "device.data.key",
+  "device_id": "7716a265-1d2b-469e-a1f1-378c514a8afd",
+  "send_interval_seconds": 10
+}

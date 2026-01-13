@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #2c3e50; color: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .login-form { max-width: 400px; margin: 100px auto; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #2980b9; }
+        .error { color: #e74c3c; margin: 10px 0; }
+        .success { color: #27ae60; margin: 10px 0; }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #34495e; color: white; }
+        .btn-small { padding: 6px 12px; margin: 2px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; width: auto; }
+        .btn-success { background: #27ae60; }
+        .btn-warning { background: #f39c12; }
+        .btn-danger { background: #e74c3c; }
+        .btn-info { background: #16a085; }
+        .logout-btn { float: right; padding: 8px 16px; background: #e74c3c; width: auto; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .form-row input, .form-row select { margin: 0; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .close { font-size: 28px; font-weight: bold; cursor: pointer; }
+        .chart-controls { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .chart-controls > * { flex: 1; min-width: 200px; }
+        .chart-container { position: relative; height: 400px; margin-top: 20px; }
+        .chart-type-toggle { display: flex; gap: 10px; }
+        .chart-type-toggle button { width: auto; padding: 8px 16px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #ecf0f1; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .stat-label { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
+        
+        /* Notification styles */
+        .notification-container { position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; }
+        .notification { background: #e74c3c; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: slideIn 0.3s ease; display: flex; justify-content: space-between; align-items: flex-start; }
+        .notification.warning { background: #f39c12; }
+        .notification.info { background: #3498db; }
+        .notification-close { cursor: pointer; font-size: 20px; margin-left: 10px; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* Chat styles */
+        .chat-widget { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .chat-toggle { width: 60px; height: 60px; border-radius: 50%; background: #3498db; color: white; border: none; cursor: pointer; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .chat-toggle:hover { background: #2980b9; }
+        .chat-box { display: none; position: fixed; bottom: 90px; right: 20px; width: 350px; height: 450px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); flex-direction: column; overflow: hidden; }
+        .chat-box.open { display: flex; }
+        .chat-header { background: #3498db; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .chat-header h3 { margin: 0; font-size: 16px; }
+        .chat-close { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; background: #f5f5f5; }
+        .chat-message { margin-bottom: 12px; max-width: 80%; }
+        .chat-message.user { margin-left: auto; }
+        .chat-message.bot, .chat-message.admin { margin-right: auto; }
+        .chat-message .bubble { padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; }
+        .chat-message.user .bubble { background: #3498db; color: white; border-bottom-right-radius: 4px; }
+        .chat-message.bot .bubble { background: #27ae60; color: white; border-bottom-left-radius: 4px; }
+        .chat-message.admin .bubble { background: #9b59b6; color: white; border-bottom-left-radius: 4px; }
+        .chat-message .sender { font-size: 11px; color: #7f8c8d; margin-bottom: 4px; }
+        .chat-message .time { font-size: 10px; color: #95a5a6; margin-top: 4px; }
+        .chat-input-container { padding: 10px; background: white; border-top: 1px solid #eee; display: flex; gap: 8px; }
+        .chat-input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        .chat-send { width: 40px; height: 40px; border-radius: 50%; background: #3498db; color: white; border: none; cursor: pointer; }
+        .chat-send:hover { background: #2980b9; }
+        .typing-indicator { font-style: italic; color: #7f8c8d; font-size: 12px; padding: 5px 15px; }
+        
+        /* Admin chat panel */
+        .admin-chat-panel { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .user-list { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .user-chip { padding: 8px 16px; background: #ecf0f1; border-radius: 20px; cursor: pointer; }
+        .user-chip.active { background: #3498db; color: white; }
+        .user-chip.has-message { background: #e74c3c; color: white; }
+        .admin-chat-messages { height: 300px; overflow-y: auto; background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .admin-chat-input { display: flex; gap: 10px; }
+        .admin-chat-input input { flex: 1; }
+        .admin-chat-input button { width: auto; padding: 10px 20px; }
+    </style>
+</head>
+<body>
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="login-form">
+        <div class="card">
+            <h2>Login</h2>
+            <div id="loginError" class="error hidden"></div>
+            <input type="text" id="username" placeholder="Username" value="admin">
+            <input type="password" id="password" placeholder="Password" value="admin123">
+            <button onclick="login()">Login</button>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminPage" class="hidden">
+        <div class="header">
+            <h1>Energy Management System - Admin</h1>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+            <div style="clear: both;"></div>
+        </div>
+        <div class="container">
+            <!-- Admin Chat Panel (only for admins) -->
+            <div class="card admin-chat-panel" id="adminChatPanel" style="display: none;">
+                <h2>💬 Customer Support Chat</h2>
+                <p style="color: #7f8c8d; margin-bottom: 15px;">Active users needing support:</p>
+                <div class="user-list" id="userList">
+                    <span style="color: #95a5a6;">No active users</span>
+                </div>
+                <div class="admin-chat-messages" id="adminChatMessages"></div>
+                <div class="admin-chat-input">
+                    <input type="text" id="adminChatInput" placeholder="Type your response..." onkeypress="if(event.key==='Enter')sendAdminMessage()">
+                    <button class="btn-small btn-success" onclick="sendAdminMessage()">Send</button>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div class="card" id="usersCard">
+                <h2>Users Management</h2>
+                <button class="btn-small btn-success" onclick="showCreateUserModal()">+ Create User</button>
+                <div id="usersError" class="error hidden"></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Address</th>
+                            <th>Age</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Devices Section -->
+            <div class="card" id="devicesCard">
+                <h2 id="devicesTitle">Devices Management</h2>
+                <button class="btn-small btn-success" onclick="showCreateDeviceModal()">+ Create Device</button>
+                <div id="devicesError" class="error hidden"></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Max Consumption Value</th>
+                            <th id="assignedUserHeader">Assigned User</th>
+                            <th id="actionsHeader">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="devicesBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Energy Consumption Visualization (for CLIENT users) -->
+            <div class="card" id="energyVisualizationCard" style="display: none;">
+                <h2>📊 Energy Consumption Dashboard</h2>
+                <div id="chartError" class="error hidden"></div>
+                
+                <div class="chart-controls">
+                    <div>
+                        <label for="deviceSelect">Select Device:</label>
+                        <select id="deviceSelect" onchange="loadEnergyData()">
+                            <option value="">-- Select a device --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="dateSelect">Select Date:</label>
+                        <input type="date" id="dateSelect" onchange="loadEnergyData()">
+                    </div>
+                    <div class="chart-type-toggle">
+                        <button class="btn-small btn-info" onclick="changeChartType('line')">Line Chart</button>
+                        <button class="btn-small btn-info" onclick="changeChartType('bar')">Bar Chart</button>
+                    </div>
+                </div>
+
+                <div class="stats-grid" id="statsGrid" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalConsumption">0</div>
+                        <div class="stat-label">Total Consumption (kWh)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgConsumption">0</div>
+                        <div class="stat-label">Average per Hour (kWh)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="peakHour">-</div>
+                        <div class="stat-label">Peak Hour</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="peakValue">0</div>
+                        <div class="stat-label">Peak Consumption (kWh)</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="energyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Widget (for CLIENT users) -->
+    <div class="chat-widget" id="chatWidget" style="display: none;">
+        <div class="chat-box" id="chatBox">
+            <div class="chat-header">
+                <h3>💬 Support Chat</h3>
+                <button class="chat-close" onclick="toggleChat()">×</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-message bot">
+                    <div class="sender">Support Bot</div>
+                    <div class="bubble">Hello! How can I help you today?</div>
+                </div>
+            </div>
+            <div id="typingIndicator" class="typing-indicator hidden">Admin is typing...</div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                <button class="chat-send" onclick="sendChatMessage()">➤</button>
+            </div>
+        </div>
+        <button class="chat-toggle" onclick="toggleChat()">💬</button>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Create User</h2>
+                <span class="close" onclick="closeUserModal()">&times;</span>
+            </div>
+            <div id="userModalError" class="error hidden"></div>
+            <input type="hidden" id="userId">
+            <input type="text" id="userName" placeholder="Name *" required>
+            <input type="text" id="userUsername" placeholder="Username *" required>
+            <input type="password" id="userPassword" placeholder="Password *" required>
+            <select id="userRole" required>
+                <option value="">Select Role *</option>
+                <option value="ADMIN">Admin</option>
+                <option value="CLIENT">Client</option>
+            </select>
+            <input type="number" id="userAge" placeholder="Age (min 18) *" min="18" required>
+            <input type="text" id="userAddress" placeholder="Address *" required>
+            <button onclick="saveUser()">Save</button>
+        </div>
+    </div>
+
+    <!-- Device Modal -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="deviceModalTitle">Create Device</h2>
+                <span class="close" onclick="closeDeviceModal()">&times;</span>
+            </div>
+            <input type="hidden" id="deviceId">
+            <input type="text" id="deviceDescription" placeholder="Device Name">
+            <input type="number" id="deviceMaxConsumption" placeholder="Max Consumption Value (min 0)">
+            <button onclick="saveDevice()">Save</button>
+        </div>
+    </div>
+
+    <!-- Assign Device Modal -->
+    <div id="assignModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Assign Device to User</h2>
+                <span class="close" onclick="closeAssignModal()">&times;</span>
+            </div>
+            <input type="hidden" id="assignDeviceId">
+            <select id="assignUserId">
+                <option value="">Select User</option>
+            </select>
+            <button onclick="assignDevice()">Assign</button>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        let userRole = localStorage.getItem('role');
+        let currentUserId = localStorage.getItem('userId');
+        let currentUsername = localStorage.getItem('username');
+        let allUsers = [];
+        let energyChart = null;
+        let currentChartType = 'line';
+        let clientDevices = [];
+        
+        // WebSocket connections
+        let notificationWs = null;
+        let chatWs = null;
+        let selectedChatUser = null;
+        let chatHistory = {}; // userId -> messages[]
+
+        if (token) showAdminPage();
+
+        // ==================== WebSocket Functions ====================
+        function connectWebSockets() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.host;
+            
+            // Connect to notification WebSocket
+            connectNotificationWs(wsProtocol, wsHost);
+            
+            // Connect to chat WebSocket
+            connectChatWs(wsProtocol, wsHost);
+        }
+
+        function connectNotificationWs(protocol, host) {
+            // Use the user-service UUID for notifications (devices are linked to this ID)
+            const userId = localStorage.getItem('userServiceId') || currentUserId || localStorage.getItem('userId');
+            if (!userId) return;
+            
+            notificationWs = new WebSocket(`${protocol}//${host}/ws/notifications?userId=${userId}`);
+            
+            notificationWs.onopen = () => {
+                console.log('Notification WebSocket connected with userId:', userId);
+                // Register with userId
+                notificationWs.send(JSON.stringify({ type: 'REGISTER', userId: userId }));
+            };
+            
+            notificationWs.onmessage = (event) => {
+                const notification = JSON.parse(event.data);
+                console.log('Received notification:', notification);
+                showNotification(notification);
+            };
+            
+            notificationWs.onclose = () => {
+                console.log('Notification WebSocket disconnected, reconnecting...');
+                setTimeout(() => connectNotificationWs(protocol, host), 3000);
+            };
+            
+            notificationWs.onerror = (error) => {
+                console.error('Notification WebSocket error:', error);
+            };
+        }
+
+        function connectChatWs(protocol, host) {
+            chatWs = new WebSocket(`${protocol}//${host}/ws/chat`);
+            
+            chatWs.onopen = () => {
+                console.log('Chat WebSocket connected');
+                // Register based on role
+                const isAdmin = userRole === 'ADMIN';
+                chatWs.send(JSON.stringify({
+                    type: 'REGISTER',
+                    senderId: currentUserId,
+                    senderName: currentUsername,
+                    isAdmin: isAdmin
+                }));
+            };
+            
+            chatWs.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                console.log('Received chat message:', message);
+                handleChatMessage(message);
+            };
+            
+            chatWs.onclose = () => {
+                console.log('Chat WebSocket disconnected, reconnecting...');
+                setTimeout(() => connectChatWs(protocol, host), 3000);
+            };
+        }
+
+        function showNotification(notification) {
+            const container = document.getElementById('notificationContainer');
+            const notifDiv = document.createElement('div');
+            notifDiv.className = 'notification';
+            
+            if (notification.type === 'OVERCONSUMPTION_ALERT') {
+                notifDiv.className += ' warning';
+            }
+            
+            notifDiv.innerHTML = `
+                <div>
+                    <strong>${notification.type === 'OVERCONSUMPTION_ALERT' ? '⚠️ Overconsumption Alert' : 'Notification'}</strong>
+                    <p style="margin-top: 5px;">${notification.message}</p>
+                    <small style="opacity: 0.8;">${notification.deviceName || ''}</small>
+                </div>
+                <span class="notification-close" onclick="this.parentElement.remove()">×</span>
+            `;
+            
+            container.appendChild(notifDiv);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (notifDiv.parentElement) {
+                    notifDiv.remove();
+                }
+            }, 10000);
+            
+            // Play sound (optional)
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQAA');
+                audio.volume = 0.3;
+                audio.play().catch(() => {});
+            } catch(e) {}
+        }
+
+        function handleChatMessage(message) {
+            if (userRole === 'ADMIN') {
+                handleAdminChatMessage(message);
+            } else {
+                handleUserChatMessage(message);
+            }
+        }
+
+        function handleUserChatMessage(message) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const typingIndicator = document.getElementById('typingIndicator');
+            
+            if (message.type === 'TYPING') {
+                typingIndicator.classList.remove('hidden');
+                setTimeout(() => typingIndicator.classList.add('hidden'), 3000);
+                return;
+            }
+            
+            if (message.type === 'BOT_RESPONSE' || message.type === 'ADMIN_MESSAGE') {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `chat-message ${message.type === 'BOT_RESPONSE' ? 'bot' : 'admin'}`;
+                msgDiv.innerHTML = `
+                    <div class="sender">${message.senderName || (message.type === 'BOT_RESPONSE' ? 'Support Bot' : 'Admin')}</div>
+                    <div class="bubble">${message.content}</div>
+                    <div class="time">${new Date().toLocaleTimeString()}</div>
+                `;
+                messagesDiv.appendChild(msgDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        }
+
+        function handleAdminChatMessage(message) {
+            if (message.type === 'USER_ONLINE' || message.type === 'ACTIVE_USERS') {
+                updateUserList(message);
+                return;
+            }
+            
+            if (message.type === 'USER_MESSAGE' || message.type === 'HELP_NEEDED') {
+                const userId = message.senderId;
+                if (!chatHistory[userId]) {
+                    chatHistory[userId] = [];
+                }
+                chatHistory[userId].push(message);
+                
+                // Update user list to show new message indicator
+                updateUserList();
+                
+                // If this user is selected, show the message
+                if (selectedChatUser === userId) {
+                    displayAdminChatMessages(userId);
+                }
+            }
+        }
+
+        function updateUserList(message) {
+            const userListDiv = document.getElementById('userList');
+            
+            if (message && message.type === 'USER_ONLINE') {
+                if (!chatHistory[message.senderId]) {
+                    chatHistory[message.senderId] = [];
+                }
+            }
+            
+            const users = Object.keys(chatHistory);
+            if (users.length === 0) {
+                userListDiv.innerHTML = '<span style="color: #95a5a6;">No active users</span>';
+                return;
+            }
+            
+            userListDiv.innerHTML = users.map(userId => {
+                const hasUnread = chatHistory[userId].some(m => !m.read);
+                const userName = chatHistory[userId][0]?.senderName || userId.substring(0, 8);
+                return `<div class="user-chip ${selectedChatUser === userId ? 'active' : ''} ${hasUnread ? 'has-message' : ''}" 
+                            onclick="selectChatUser('${userId}')">${userName}</div>`;
+            }).join('');
+        }
+
+        function selectChatUser(userId) {
+            // Toggle: if clicking the same user, deselect (hide messages)
+            if (selectedChatUser === userId) {
+                selectedChatUser = null;
+                updateUserList();
+                displayAdminChatMessages(null);
+                return;
+            }
+            
+            selectedChatUser = userId;
+            // Mark messages as read
+            if (chatHistory[userId]) {
+                chatHistory[userId].forEach(m => m.read = true);
+            }
+            updateUserList();
+            displayAdminChatMessages(userId);
+        }
+
+        function displayAdminChatMessages(userId) {
+            const messagesDiv = document.getElementById('adminChatMessages');
+            
+            // If no user selected, show placeholder
+            if (!userId) {
+                messagesDiv.innerHTML = '<p style="color: #95a5a6; text-align: center; margin-top: 100px;">Select a user to view messages</p>';
+                return;
+            }
+            
+            const messages = chatHistory[userId] || [];
+            
+            messagesDiv.innerHTML = messages.map(msg => `
+                <div class="chat-message ${msg.type === 'ADMIN_MESSAGE' ? 'user' : 'bot'}">
+                    <div class="sender">${msg.senderName || 'User'}</div>
+                    <div class="bubble">${msg.content}</div>
+                    <div class="time">${msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}</div>
+                </div>
+            `).join('');
+            
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const content = input.value.trim();
+            if (!content || !chatWs) return;
+            
+            const message = {
+                type: 'USER_MESSAGE',
+                senderId: currentUserId,
+                senderName: currentUsername,
+                content: content,
+                isAdmin: false
+            };
+            
+            chatWs.send(JSON.stringify(message));
+            
+            // Show message in UI
+            const messagesDiv = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-message user';
+            msgDiv.innerHTML = `
+                <div class="sender">You</div>
+                <div class="bubble">${content}</div>
+                <div class="time">${new Date().toLocaleTimeString()}</div>
+            `;
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            input.value = '';
+        }
+
+        function sendAdminMessage() {
+            const input = document.getElementById('adminChatInput');
+            const content = input.value.trim();
+            if (!content || !chatWs || !selectedChatUser) {
+                alert('Please select a user first');
+                return;
+            }
+            
+            const message = {
+                type: 'ADMIN_MESSAGE',
+                senderId: currentUserId,
+                senderName: currentUsername,
+                recipientId: selectedChatUser,
+                content: content,
+                isAdmin: true
+            };
+            
+            chatWs.send(JSON.stringify(message));
+            
+            // Add to local history
+            if (!chatHistory[selectedChatUser]) {
+                chatHistory[selectedChatUser] = [];
+            }
+            chatHistory[selectedChatUser].push(message);
+            displayAdminChatMessages(selectedChatUser);
+            
+            input.value = '';
+        }
+
+        function toggleChat() {
+            const chatBox = document.getElementById('chatBox');
+            chatBox.classList.toggle('open');
+        }
+
+        // ==================== Auth Functions ====================
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) throw new Error('Login failed');
+
+                const data = await response.json();
+                token = data.token;
+                userRole = data.role;
+                
+                localStorage.setItem('token', token);
+                localStorage.setItem('role', userRole);
+                localStorage.setItem('username', data.username);
+                localStorage.setItem('userId', data.userId);
+                
+                currentUserId = data.userId;
+                currentUsername = data.username;
+
+                errorDiv.classList.add('hidden');
+                showAdminPage();
+            } catch (error) {
+                errorDiv.textContent = 'Invalid username or password';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            if (notificationWs) notificationWs.close();
+            if (chatWs) chatWs.close();
+            token = null;
+            userRole = null;
+            document.getElementById('adminPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            location.reload();
+        }
+
+        async function showAdminPage() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('adminPage').classList.remove('hidden');
+            
+            userRole = localStorage.getItem('role');
+            currentUsername = localStorage.getItem('username');
+            currentUserId = localStorage.getItem('userId');
+            
+            // Load users first to get the correct UUID
+            await loadUsers();
+            
+            // Find the current user's UUID from user-service (for notifications)
+            const currentUser = allUsers.find(u => u.username === currentUsername);
+            if (currentUser) {
+                // Store the user-service UUID for notifications
+                localStorage.setItem('userServiceId', currentUser.id);
+            }
+            
+            // Connect WebSockets (after we have the correct UUID)
+            connectWebSockets();
+            
+            if (userRole === 'CLIENT') {
+                // Hide users card for clients
+                const usersCard = document.getElementById('usersCard');
+                if (usersCard) usersCard.style.display = 'none';
+                
+                document.querySelector('h1').textContent = 'My Devices - ' + currentUsername;
+                document.getElementById('devicesTitle').textContent = 'My Assigned Devices';
+                document.getElementById('assignedUserHeader').style.display = 'none';
+                document.getElementById('energyVisualizationCard').style.display = 'block';
+                document.getElementById('chatWidget').style.display = 'block';
+                document.getElementById('adminChatPanel').style.display = 'none';
+                document.getElementById('dateSelect').valueAsDate = new Date();
+                
+                await loadDevices();
+            } else {
+                // Admin view
+                document.querySelector('h1').textContent = 'Energy Management System - Admin';
+                document.getElementById('devicesTitle').textContent = 'Devices Management';
+                document.getElementById('assignedUserHeader').style.display = 'table-cell';
+                document.getElementById('energyVisualizationCard').style.display = 'none';
+                document.getElementById('chatWidget').style.display = 'none';
+                document.getElementById('adminChatPanel').style.display = 'block';
+                
+                await loadDevices();
+            }
+        }
+
+        // ==================== User Management ====================
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load users');
+                
+                allUsers = await response.json();
+                
+                const tbody = document.getElementById('usersBody');
+                if (tbody && userRole === 'ADMIN') {
+                    tbody.innerHTML = allUsers.map(user => `
+                        <tr>
+                            <td>${user.id.substring(0, 8)}...</td>
+                            <td>${user.username || 'N/A'}</td>
+                            <td>${user.name || 'N/A'}</td>
+                            <td>${user.role || 'N/A'}</td>
+                            <td>${user.address || 'N/A'}</td>
+                            <td>${user.age || 'N/A'}</td>
+                            <td>
+                                <button class="btn-small btn-warning" onclick='editUser(${JSON.stringify(user)})'>Edit</button>
+                                <button class="btn-small btn-danger" onclick="deleteUser('${user.id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                const usersError = document.getElementById('usersError');
+                if (usersError) {
+                    usersError.textContent = 'Failed to load users: ' + error.message;
+                    usersError.classList.remove('hidden');
+                }
+            }
+        }
+
+        async function loadDevices() {
+            try {
+                const response = await fetch('/api/devices');
+                if (!response.ok) throw new Error('Failed to load devices');
+                
+                let devices = await response.json();
+                
+                let clientUserUUID = null;
+                if (userRole === 'CLIENT' && allUsers.length > 0) {
+                    const currentUser = allUsers.find(u => u.username === currentUsername);
+                    if (currentUser) {
+                        clientUserUUID = currentUser.id;
+                    }
+                }
+                
+                if (userRole === 'CLIENT') {
+                    if (clientUserUUID) {
+                        devices = devices.filter(device => device.userId === clientUserUUID);
+                        clientDevices = devices;
+                        populateDeviceDropdown(devices);
+                    } else {
+                        devices = [];
+                        clientDevices = [];
+                    }
+                    const createBtn = document.querySelector('#devicesCard .btn-success');
+                    if (createBtn) createBtn.style.display = 'none';
+                } else {
+                    const createBtn = document.querySelector('#devicesCard .btn-success');
+                    if (createBtn) createBtn.style.display = 'inline-block';
+                }
+                
+                const tbody = document.getElementById('devicesBody');
+                tbody.innerHTML = devices.map(device => {
+                    const assignedUser = device.userId ? allUsers.find(u => u.id === device.userId) : null;
+                    const userName = assignedUser ? assignedUser.name : (device.userId ? 'Unknown User' : 'Unassigned');
+                    
+                    const actionButtons = userRole === 'ADMIN' ? `
+                        <button class="btn-small btn-warning" onclick='editDevice(${JSON.stringify(device)})'>Edit</button>
+                        <button class="btn-small btn-success" onclick="showAssignModal('${device.id}')">Assign</button>
+                        <button class="btn-small btn-danger" onclick="deleteDevice('${device.id}')">Delete</button>
+                    ` : '-';
+                    
+                    const assignedUserCell = userRole === 'ADMIN' ? `<td>${userName}</td>` : '';
+                    
+                    return `
+                    <tr>
+                        <td>${device.id.substring(0, 8)}...</td>
+                        <td>${device.name || 'N/A'}</td>
+                        <td>${device.maximumConsumptionValue || 'N/A'}</td>
+                        ${assignedUserCell}
+                        <td>${actionButtons}</td>
+                    </tr>
+                `}).join('');
+            } catch (error) {
+                document.getElementById('devicesError').textContent = 'Failed to load devices: ' + error.message;
+                document.getElementById('devicesError').classList.remove('hidden');
+            }
+        }
+
+        function showCreateUserModal() {
+            document.getElementById('userModalTitle').textContent = 'Create User';
+            document.getElementById('userId').value = '';
+            document.getElementById('userName').value = '';
+            document.getElementById('userUsername').value = '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userRole').value = '';
+            document.getElementById('userAge').value = '';
+            document.getElementById('userAddress').value = '';
+            document.getElementById('userModal').style.display = 'block';
+        }
+
+        function editUser(user) {
+            document.getElementById('userModalTitle').textContent = 'Edit User';
+            document.getElementById('userId').value = user.id;
+            document.getElementById('userName').value = user.name || '';
+            document.getElementById('userUsername').value = user.username || '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userRole').value = user.role || '';
+            document.getElementById('userAge').value = user.age || '';
+            document.getElementById('userAddress').value = user.address || '';
+            document.getElementById('userModal').style.display = 'block';
+        }
+
+        function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
+
+        async function saveUser() {
+            const id = document.getElementById('userId').value;
+            const userData = {
+                name: document.getElementById('userName').value,
+                username: document.getElementById('userUsername').value,
+                password: document.getElementById('userPassword').value,
+                role: document.getElementById('userRole').value,
+                age: parseInt(document.getElementById('userAge').value),
+                address: document.getElementById('userAddress').value
+            };
+
+            try {
+                const url = id ? `/api/users/${id}` : '/api/users';
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) throw new Error('Failed to save user');
+                closeUserModal();
+                loadUsers();
+            } catch (error) {
+                alert('Failed to save user: ' + error.message);
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Delete this user?')) return;
+            try {
+                const response = await fetch(`/api/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Failed to delete');
+                loadUsers();
+            } catch (error) {
+                alert('Failed to delete user: ' + error.message);
+            }
+        }
+
+        // ==================== Device Management ====================
+        function showCreateDeviceModal() {
+            document.getElementById('deviceModalTitle').textContent = 'Create Device';
+            document.getElementById('deviceId').value = '';
+            document.getElementById('deviceDescription').value = '';
+            document.getElementById('deviceMaxConsumption').value = '';
+            document.getElementById('deviceModal').style.display = 'block';
+        }
+
+        function editDevice(device) {
+            document.getElementById('deviceModalTitle').textContent = 'Edit Device';
+            document.getElementById('deviceId').value = device.id;
+            document.getElementById('deviceDescription').value = device.name || '';
+            document.getElementById('deviceMaxConsumption').value = device.maximumConsumptionValue || '';
+            document.getElementById('deviceModal').style.display = 'block';
+        }
+
+        function closeDeviceModal() { document.getElementById('deviceModal').style.display = 'none'; }
+
+        async function saveDevice() {
+            const id = document.getElementById('deviceId').value;
+            const deviceData = {
+                name: document.getElementById('deviceDescription').value,
+                maximumConsumptionValue: parseInt(document.getElementById('deviceMaxConsumption').value)
+            };
+
+            try {
+                const url = id ? `/api/devices/${id}` : '/api/devices';
+                const method = id ? 'PUT' : 'POST';
+                const role = userRole || localStorage.getItem('role') || 'USER';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Role': role
+                    },
+                    body: JSON.stringify(deviceData)
+                });
+
+                if (!response.ok) throw new Error('Failed to save device');
+                closeDeviceModal();
+                loadDevices();
+            } catch (error) {
+                alert('Failed to save device: ' + error.message);
+            }
+        }
+
+        async function deleteDevice(id) {
+            if (!confirm('Delete this device?')) return;
+            try {
+                const response = await fetch(`/api/devices/${id}`, {
+                    method: 'DELETE',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Role': userRole || localStorage.getItem('role') || 'USER'
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to delete');
+                loadDevices();
+            } catch (error) {
+                alert('Failed to delete device: ' + error.message);
+            }
+        }
+
+        function showAssignModal(deviceId) {
+            document.getElementById('assignDeviceId').value = deviceId;
+            const select = document.getElementById('assignUserId');
+            select.innerHTML = '<option value="">Select User</option>' + 
+                allUsers.map(user => `<option value="${user.id}">${user.name} (Age: ${user.age})</option>`).join('');
+            document.getElementById('assignModal').style.display = 'block';
+        }
+
+        function closeAssignModal() { document.getElementById('assignModal').style.display = 'none'; }
+
+        async function assignDevice() {
+            const deviceId = document.getElementById('assignDeviceId').value;
+            const userId = document.getElementById('assignUserId').value;
+
+            if (!userId) { alert('Please select a user'); return; }
+
+            try {
+                const response = await fetch(`/api/devices/${deviceId}/assign/${userId}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Role': userRole || localStorage.getItem('role') || 'USER'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to assign device');
+                closeAssignModal();
+                loadDevices();
+            } catch (error) {
+                alert('Failed to assign device: ' + error.message);
+            }
+        }
+
+        // ==================== Energy Visualization ====================
+        function populateDeviceDropdown(devices) {
+            const select = document.getElementById('deviceSelect');
+            select.innerHTML = '<option value="">-- Select a device --</option>' + 
+                devices.map(device => `<option value="${device.id}">${device.name}</option>`).join('');
+        }
+
+        async function loadEnergyData() {
+            const deviceId = document.getElementById('deviceSelect').value;
+            const selectedDate = document.getElementById('dateSelect').value;
+            const errorDiv = document.getElementById('chartError');
+
+            if (!deviceId || !selectedDate) {
+                errorDiv.textContent = 'Please select both a device and a date';
+                errorDiv.classList.remove('hidden');
+                document.getElementById('statsGrid').style.display = 'none';
+                if (energyChart) { energyChart.destroy(); energyChart = null; }
+                return;
+            }
+
+            errorDiv.classList.add('hidden');
+
+            try {
+                const startDate = `${selectedDate}T00:00:00`;
+                const endDate = `${selectedDate}T23:59:59`;
+
+                const response = await fetch(`/api/monitoring/devices/${deviceId}/hourly?start=${startDate}&end=${endDate}`);
+                if (!response.ok) throw new Error(`Failed to load energy data: ${response.status}`);
+
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    errorDiv.textContent = 'No energy consumption data available for the selected date';
+                    errorDiv.classList.remove('hidden');
+                    document.getElementById('statsGrid').style.display = 'none';
+                    if (energyChart) { energyChart.destroy(); energyChart = null; }
+                    return;
+                }
+
+                displayEnergyChart(data);
+                displayStatistics(data);
+            } catch (error) {
+                errorDiv.textContent = 'Failed to load energy data: ' + error.message;
+                errorDiv.classList.remove('hidden');
+                document.getElementById('statsGrid').style.display = 'none';
+            }
+        }
+
+        function displayEnergyChart(data) {
+            const hours = Array.from({length: 24}, (_, i) => i);
+            const consumptionMap = new Map();
+            data.forEach(item => {
+                const hour = new Date(item.hourTimestamp).getHours();
+                consumptionMap.set(hour, item.totalConsumption || 0);
+            });
+            const consumptionValues = hours.map(hour => consumptionMap.get(hour) || 0);
+
+            const ctx = document.getElementById('energyChart').getContext('2d');
+            if (energyChart) energyChart.destroy();
+
+            energyChart = new Chart(ctx, {
+                type: currentChartType,
+                data: {
+                    labels: hours.map(h => `${h}:00`),
+                    datasets: [{
+                        label: 'Energy Consumption (kWh)',
+                        data: consumptionValues,
+                        backgroundColor: currentChartType === 'bar' ? 'rgba(52, 152, 219, 0.6)' : 'rgba(52, 152, 219, 0.2)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 2,
+                        fill: currentChartType === 'line',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        title: { display: true, text: 'Hourly Energy Consumption', font: { size: 16 } }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Hour of Day' } },
+                        y: { title: { display: true, text: 'Energy Consumption (kWh)' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function displayStatistics(data) {
+            document.getElementById('statsGrid').style.display = 'grid';
+            const totalConsumption = data.reduce((sum, item) => sum + (item.totalConsumption || 0), 0);
+            const avgConsumption = data.length > 0 ? totalConsumption / data.length : 0;
+            let peakItem = data.reduce((max, item) => (item.totalConsumption || 0) > (max.totalConsumption || 0) ? item : max, data[0] || {});
+            const peakHour = peakItem ? new Date(peakItem.hourTimestamp).getHours() : 0;
+            const peakValue = peakItem ? (peakItem.totalConsumption || 0) : 0;
+
+            document.getElementById('totalConsumption').textContent = totalConsumption.toFixed(3);
+            document.getElementById('avgConsumption').textContent = avgConsumption.toFixed(3);
+            document.getElementById('peakHour').textContent = `${peakHour}:00`;
+            document.getElementById('peakValue').textContent = peakValue.toFixed(3);
+        }
+
+        function changeChartType(type) {
+            currentChartType = type;
+            const deviceId = document.getElementById('deviceSelect').value;
+            const selectedDate = document.getElementById('dateSelect').value;
+            if (deviceId && selectedDate) loadEnergyData();
+        }
+    </script>
+</body>
+</html>

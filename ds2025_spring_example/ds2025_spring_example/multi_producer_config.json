@@ -1,0 +1,20 @@
+{
+  "rabbitmq_url": "amqps://jjzdoqha:ZDgoASIn_byMxyvseOM3lswd-ST0sipZ@cow.rmq2.cloudamqp.com/jjzdoqha",
+  "exchange": "data_exchange",
+  "routing_key": "device.data.key",
+  "send_interval_seconds": 600,
+  "devices": [
+    {
+      "device_id": "device_001",
+      "name": "Smart Meter 1"
+    },
+    {
+      "device_id": "device_002",
+      "name": "Smart Meter 2"
+    },
+    {
+      "device_id": "device_003",
+      "name": "Smart Meter 3"
+    }
+  ]
+}
