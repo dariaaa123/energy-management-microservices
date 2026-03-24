@@ -8,7 +8,7 @@ EXCHANGE = "data_exchange"
 ROUTING_KEY = "device.data.key"
 
 # Device "masina de tuns iarba" - max 200, belongs to maria
-DEVICE_ID = "31483615-a6d6-4c24-9294-5f0e01518a7f"
+DEVICE_ID = "54c6160d-f9b5-4d20-9c69-44450e230cdc"
 HIGH_VALUE = 350  # Over the 200 limit!
 
 print(f"[*] Connecting to RabbitMQ...")

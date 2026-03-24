@@ -1,0 +1,60 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+**/.idea/
+**/*.ps1
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+ds2025_spring_example/ds2025_spring_example/ARCHITECTURE.md
+ds2025_spring_example/ds2025_spring_example/ASSIGNMENT2_README.md
+ds2025_spring_example/ds2025_spring_example/ASSIGNMENT3_README.md
+ds2025_spring_example/ds2025_spring_example/MONITORING_SERVICE_CHANGES.md
+ds2025_spring_example/ds2025_spring_example/PRODUCER_DOCKER.md
+ds2025_spring_example/ds2025_spring_example/PRODUCER_README.md
+ds2025_spring_example/ds2025_spring_example/QUICKSTART.md
+ds2025_spring_example/ds2025_spring_example/README.md
+ds2025_spring_example/ds2025_spring_example/SYNC_ARCHITECTURE.md
+ds2025_spring_example/ds2025_spring_example/TESTING_GUIDE.md
+ds2025_spring_example/ds2025_spring_example/VISUALIZATION_FEATURE.md
