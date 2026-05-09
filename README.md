@@ -102,20 +102,23 @@ User → WebSocket → Chat Service (Rules/AI) → WebSocket → User
 -  Bidirectional client-admin chat
 -  Modern interface with notifications
 
-##  Technologies
+## 🛠️ Technologies
 
 ### Backend
 - **Java 21**
-- **Spring Boot 3.2.0 / 4.0.0-SNAPSHOT**
-- **Spring Security** (JWT Authentication)
-- **Spring Data JPA** (Hibernate)
-- **Spring AMQP** (RabbitMQ)
+- **Spring Boot 3.2.0 / 3.3.4 / 4.0.0-SNAPSHOT**
+- **Spring Security** — JWT Authentication with **jjwt 0.11.5**
+- **Spring Data JPA** — Hibernate
+- **Spring AMQP** — RabbitMQ integration
 - **Spring WebSocket**
+- **Spring WebFlux** — Reactive HTTP Client
 - **PostgreSQL 17**
+- **Lombok**
 
 ### Message Broker
-- **RabbitMQ** (CloudAMQP hosted)
+- **RabbitMQ** — CloudAMQP hosted
 - **AMQP Protocol** over TLS
+- **Pika** — Python RabbitMQ client
 
 ### Frontend
 - **HTML5, CSS3, JavaScript**
@@ -125,12 +128,12 @@ User → WebSocket → Chat Service (Rules/AI) → WebSocket → User
 
 ### Infrastructure
 - **Docker & Docker Compose**
-- **Traefik v2.10** (Reverse Proxy)
-- **Python 3.8+** (Device Simulator)
+- **Traefik v2.10** — Reverse Proxy & API Gateway
+- **Python 3** — Device Simulator
 
 ### AI Integration
 - **Hugging Face Inference API**
-- Model: `mistralai/Mistral-7B-Instruct-v0.2`
+- **Model:** `Qwen/Qwen2.5-72B-Instruct`
 
 ##  Installation and Running
 
@@ -165,16 +168,6 @@ docker-compose down
 - **Frontend**: http://localhost
 - **Traefik Dashboard**: http://localhost:8080
 - **PostgreSQL**: localhost:5433
-
-### Default Credentials
-
-**Admin:**
-- Username: `admin`
-- Password: `admin123`
-
-**Test User:**
-- Username: `maria`
-- Password: `maria123`
 
 
 ### RabbitMQ
