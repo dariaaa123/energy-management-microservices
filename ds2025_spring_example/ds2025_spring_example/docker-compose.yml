@@ -1,5 +1,5 @@
 services:
-  # 🚀 Traefik Reverse Proxy
+  # Traefik Reverse Proxy
   traefik:
     image: traefik:v2.10
     container_name: ds2025-traefik
@@ -19,7 +19,7 @@ services:
       - demo_net
     restart: always
 
-  # 📊 Shared PostgreSQL Database
+  # Shared PostgreSQL Database
   postgres:
     image: postgres:17
     container_name: ds2025-postgres
@@ -42,7 +42,7 @@ services:
       - demo_net
 
 
-  # 🔐 Authorization Service
+  # Authorization Service
   authorization-service:
     build: ./AuthorizationService
     container_name: ds2025-authorization-service
@@ -65,7 +65,7 @@ services:
     networks:
       - demo_net
 
-  # 👥 User Service
+  # User Service
   user-service:
     build: ./demo
     container_name: ds2025-user-service
@@ -89,7 +89,7 @@ services:
     networks:
       - demo_net
 
-  # ⚙️ Device Service
+  # Device Service
   device-service:
     build: ./DeviceMicroService
     container_name: ds2025-device-service
@@ -112,7 +112,7 @@ services:
     networks:
       - demo_net
 
-  # 📊 Monitoring Service
+  # Monitoring Service
   monitoring-service:
     build: ./MonitoringMicroservice
     container_name: ds2025-monitoring-service
@@ -136,7 +136,7 @@ services:
     networks:
       - demo_net
 
-  # 🔌 WebSocket Service
+  # WebSocket Service
   websocket-service:
     build: ./WebSocketService
     container_name: ds2025-websocket-service
@@ -155,7 +155,7 @@ services:
     networks:
       - demo_net
 
-  # 💬 Chat Service
+  # Chat Service
   chat-service:
     build: ./ChatService
     container_name: ds2025-chat-service
@@ -176,7 +176,7 @@ services:
     networks:
       - demo_net
 
-  # 🎨 Frontend Application
+  # Frontend Application
   frontend:
     build: ./simple-frontend
     container_name: ds2025-frontend
@@ -191,7 +191,7 @@ services:
     networks:
       - demo_net
 
-  # 📡 Device Data Producer (Simulator)
+  # Device Data Producer (Simulator)
   producer:
     build: ./producer
     container_name: ds2025-producer
