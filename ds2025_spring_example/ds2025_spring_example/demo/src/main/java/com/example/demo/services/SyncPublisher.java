@@ -22,14 +22,14 @@ public class SyncPublisher {
     private String syncRoutingKey;
     
     public void publishUserSync(String action, String userId, String username, String name) {
-        LOGGER.info("🔔 publishUserSync called: action={}, userId={}, username={}", action, userId, username);
+        LOGGER.info("publishUserSync called: action={}, userId={}, username={}", action, userId, username);
         
         if (rabbitTemplate == null) {
-            LOGGER.warn("❌ RabbitTemplate not available, skipping sync message");
+            LOGGER.warn("RabbitTemplate not available, skipping sync message");
             return;
         }
         
-        LOGGER.info("✅ RabbitTemplate is available, publishing to exchange={}, routingKey={}", syncExchange, syncRoutingKey);
+        LOGGER.info("RabbitTemplate is available, publishing to exchange={}, routingKey={}", syncExchange, syncRoutingKey);
         
         try {
             SyncMessage message = new SyncMessage();
@@ -40,9 +40,9 @@ public class SyncPublisher {
             message.setName(name);
             
             rabbitTemplate.convertAndSend(syncExchange, syncRoutingKey, message);
-            LOGGER.info("✅ Published user sync message: {} for user {}", action, userId);
+            LOGGER.info("Published user sync message: {} for user {}", action, userId);
         } catch (Exception e) {
-            LOGGER.error("❌ Failed to publish user sync message: {}", e.getMessage(), e);
+            LOGGER.error("Failed to publish user sync message: {}", e.getMessage(), e);
         }
     }
 }

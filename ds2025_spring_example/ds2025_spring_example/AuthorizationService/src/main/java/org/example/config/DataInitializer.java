@@ -23,7 +23,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // Check if users already exist to avoid duplicates
         if (userRepository.count() == 0) {
-            System.out.println("🚀 Initializing default users...");
+            System.out.println(" Initializing default users...");
             
             // Create admin user
             User admin = new User(
@@ -32,7 +32,7 @@ public class DataInitializer implements CommandLineRunner {
                 Role.ADMIN
             );
             userRepository.save(admin);
-            System.out.println("✅ Created admin user: admin/admin123");
+            System.out.println(" Created admin user: admin/admin123");
             
             // Create client user
             User client = new User(
@@ -41,7 +41,7 @@ public class DataInitializer implements CommandLineRunner {
                 Role.CLIENT
             );
             userRepository.save(client);
-            System.out.println("✅ Created client user: client/client123");
+            System.out.println(" Created client user: client/client123");
             
             // Create test user
             User testUser = new User(
@@ -50,11 +50,11 @@ public class DataInitializer implements CommandLineRunner {
                 Role.CLIENT
             );
             userRepository.save(testUser);
-            System.out.println("✅ Created test user: test/password");
+            System.out.println("Created test user: test/password");
             
-            System.out.println("🎉 Default users initialized successfully!");
+            System.out.println("Default users initialized successfully!");
         } else {
-            System.out.println("ℹ️ Users already exist, skipping initialization");
+            System.out.println("Users already exist, skipping initialization");
         }
     }
 }
