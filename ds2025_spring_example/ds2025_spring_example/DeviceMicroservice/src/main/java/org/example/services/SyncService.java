@@ -43,7 +43,7 @@ public class SyncService {
             user.setName(message.getName());
             
             userRepository.save(user);
-            log.info("✅ Synced user to device-db: {}", user);
+            log.info("Synced user to device-db: {}", user);
             
         } else if ("DELETE".equalsIgnoreCase(action)) {
             String userId = message.getUserId();
@@ -58,14 +58,14 @@ public class SyncService {
                     device.setUserId(null);
                     deviceRepository.save(device);
                 }
-                log.info("✅ Unassigned {} devices from deleted user {}", userDevices.size(), userId);
+                log.info("Unassigned {} devices from deleted user {}", userDevices.size(), userId);
             } else {
                 log.info("No devices found for user {}", userId);
             }
             
             // Then delete the user
             userRepository.deleteById(userId);
-            log.info("✅ Deleted user from device-db: {}", userId);
+            log.info("Deleted user from device-db: {}", userId);
         }
     }
 }

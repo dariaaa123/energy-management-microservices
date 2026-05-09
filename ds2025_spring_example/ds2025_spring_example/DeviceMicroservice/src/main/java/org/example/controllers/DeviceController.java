@@ -43,15 +43,15 @@ public class DeviceController {
             @Valid @RequestBody DeviceDetailsDTO device,
             @RequestHeader(value = "X-User-Role", required = false) String role) {
         
-        System.out.println("🔍 Received role header: '" + role + "'");
+        System.out.println("Received role header: '" + role + "'");
         
         // Only ADMIN can create devices
         if (role == null || !role.equals("ADMIN")) {
-            System.out.println("❌ Access denied. Role is: " + role);
+            System.out.println("Access denied. Role is: " + role);
             return ResponseEntity.status(403).build();
         }
         
-        System.out.println("✅ Admin access granted");
+        System.out.println("Admin access granted");
         UUID id = deviceService.insert(device);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()

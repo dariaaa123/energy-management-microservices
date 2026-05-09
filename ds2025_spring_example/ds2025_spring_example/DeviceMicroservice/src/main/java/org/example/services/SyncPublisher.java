@@ -24,7 +24,7 @@ public class SyncPublisher {
     public void publishDeviceSync(String action, String deviceId, String deviceName, 
                                    int maximumConsumptionValue, String assignedUserId) {
         if (rabbitTemplate == null) {
-            LOGGER.warn("❌ RabbitTemplate not available, skipping sync message");
+            LOGGER.warn("RabbitTemplate not available, skipping sync message");
             return;
         }
         
@@ -38,9 +38,9 @@ public class SyncPublisher {
             message.setAssignedUserId(assignedUserId);
             
             rabbitTemplate.convertAndSend(syncExchange, syncRoutingKey, message);
-            LOGGER.info("✅ Published device sync message: {} for device {}", action, deviceId);
+            LOGGER.info("Published device sync message: {} for device {}", action, deviceId);
         } catch (Exception e) {
-            LOGGER.error("❌ Failed to publish device sync message: {}", e.getMessage(), e);
+            LOGGER.error("Failed to publish device sync message: {}", e.getMessage(), e);
         }
     }
 }

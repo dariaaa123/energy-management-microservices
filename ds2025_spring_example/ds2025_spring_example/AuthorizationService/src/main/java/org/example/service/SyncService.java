@@ -37,7 +37,7 @@ public class SyncService {
             userRepository.findByUsername(message.getUsername())
                 .ifPresent(user -> {
                     userRepository.delete(user);
-                    log.info("✅ Deleted user from auth: {}", message.getUsername());
+                    log.info("Deleted user from auth: {}", message.getUsername());
                 });
         } else {
             log.debug("Ignoring {} action for auth service - users are created via register endpoint", action);

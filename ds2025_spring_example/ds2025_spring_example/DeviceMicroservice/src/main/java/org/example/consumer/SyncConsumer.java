@@ -16,16 +16,16 @@ public class SyncConsumer {
     
     @jakarta.annotation.PostConstruct
     public void init() {
-        log.info("🚀 SyncConsumer initialized and ready to consume messages from queue: ${rabbitmq.queue.sync}");
+        log.info("SyncConsumer initialized and ready to consume messages from queue: ${rabbitmq.queue.sync}");
     }
     
     @RabbitListener(queues = "${rabbitmq.queue.sync}")
     public void consumeSyncMessage(SyncMessage message) {
         try {
-            log.info("📨 Received sync message: {}", message);
+            log.info("Received sync message: {}", message);
             syncService.processSyncMessage(message);
         } catch (Exception e) {
-            log.error("❌ Error processing sync message: {}", message, e);
+            log.error("Error processing sync message: {}", message, e);
         }
     }
 }

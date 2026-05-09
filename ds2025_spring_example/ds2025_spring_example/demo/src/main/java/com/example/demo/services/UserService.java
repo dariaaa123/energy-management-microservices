@@ -66,9 +66,9 @@ public class UserService {
         if (personDTO.getUsername() != null && personDTO.getPassword() != null && personDTO.getRole() != null) {
             try {
                 syncWithAuthService(personDTO.getUsername(), personDTO.getPassword(), personDTO.getRole());
-                LOGGER.info("✅ User {} synced with AuthorizationService", personDTO.getUsername());
+                LOGGER.info("User {} synced with AuthorizationService", personDTO.getUsername());
             } catch (Exception e) {
-                LOGGER.error("❌ Failed to sync user with AuthorizationService: {}", e.getMessage());
+                LOGGER.error("Failed to sync user with AuthorizationService: {}", e.getMessage());
                 // Don't fail the user creation if auth sync fails
             }
         }

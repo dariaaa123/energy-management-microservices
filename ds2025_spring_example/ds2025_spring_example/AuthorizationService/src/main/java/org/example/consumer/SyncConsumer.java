@@ -20,10 +20,10 @@ public class SyncConsumer {
     @RabbitListener(queues = "${rabbitmq.queue.sync}")
     public void consumeSyncMessage(SyncMessage message) {
         try {
-            log.info("📨 Received sync message: {}", message);
+            log.info(" Received sync message: {}", message);
             syncService.processSyncMessage(message);
         } catch (Exception e) {
-            log.error("❌ Error processing sync message: {}", message, e);
+            log.error(" Error processing sync message: {}", message, e);
         }
     }
 }
